@@ -47,11 +47,21 @@ node index.js
 ```
 
 ### 테스트(curl)
+```
+apt  install jq  # version 1.7.1-3ubuntu0.24.04.1
+```
+---
 ```bash
 curl -s http://localhost:3001/tts \
   -H 'Content-Type: application/json' \
-  -d '{"text":"안녕하세요. 폴리 실습입니다.","voiceId":"Seoyeon","format":"mp3"}' | jq -r '.audioBase64' | head
+  -d '{"text":"안녕하세요. 폴리 실습입니다.","voiceId":"Seoyeon","format":"mp3"}' \
+| jq -r '.audioBase64' \
+| base64 -d > out.mp3
+
 ```
+---
+
+
 
 ### Postman
 `postman/` 폴더의 컬렉션/환경파일을 import 후 실행하세요.
