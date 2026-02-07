@@ -1,5 +1,33 @@
 # Amazon Polly + Node.js 실습 레포 (AI-AWS-Polly)
 
+## 기술 스택 (이 레포 실습에 필요한 구성)
+
+### 런타임 / 언어
+- **Node.js 18+**: 서버(Express)와 Lambda 핸들러 실행 환경
+- **JavaScript (ES Modules/CommonJS 혼용 가능)**: 실습 코드 작성 언어
+
+### AWS 서비스
+- **Amazon Polly**: 텍스트를 음성(MP3/OGG/PCM)으로 변환
+- **AWS Lambda (Function URL)**: TTS API 서버리스 실행
+- **Amazon S3**: 생성된 음성 파일 저장 및 정적 접근
+- **AWS IAM**: Lambda 실행 역할/권한 및 배포 권한 관리
+
+### SDK / API / 배포 도구
+- **AWS SDK for JavaScript v3**: Polly/S3 등 AWS API 호출
+- **AWS CLI**: IAM 정책 적용, Lambda 배포/업데이트, S3 CORS 설정
+- **Bash 스크립트 (`infra/aws-cli-deploy-lambda.sh`)**: CLI 기반 배포 자동화
+
+### 웹/애플리케이션 구성
+- **Express (server/)**: 기존 실습용 API 서버
+- **Frontend (Vanilla HTML/CSS/JS)**: 텍스트 입력, 음성 생성 요청, 재생 UI
+- **HTTP 정적 서버 (`http-server`)**: `frontend/` 로컬 실행
+- **CORS 설정**: 로컬 프론트엔드와 Lambda Function URL 연동
+
+### 개발/실습 환경
+- **zip/unzip**: Lambda 배포 패키징 보조 도구
+- **Linux/WSL/터미널 환경**: 제공된 스크립트 및 AWS CLI 명령 실행 환경
+- **AWS 계정 및 사전 구성**: AWS CLI 로그인, S3 버킷 준비
+
 Amazon Polly(Text-to-Speech)를 Node.js(AWS SDK v3)로 호출해 다음을 실습합니다.
 - MP3/OGG/PCM 생성
 - SSML 제어
