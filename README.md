@@ -213,3 +213,44 @@ node index.js
 - API: `docs/api.md`
 - SSML: `docs/ssml-snippets.md`
 - IAM: `docs/iam-policy.md`
+- TODO(고도화 백로그): `TODO.md`
+
+## 5) 운영 관점 기술 상세 (실무 체크포인트)
+
+### 5-1. 오디오 파일 수명주기(S3 Lifecycle)
+- TTS 결과물을 임시 파일로 다루는 경우, 비용/보안/개인정보 관점에서 **자동 만료 정책**이 중요합니다.
+- 권장: `polly-lab/` prefix 객체는 `1일` 또는 `1시간` 기준으로 자동 삭제.
+- 1시간 단위 만료는 S3 Lifecycle의 최소 해상도(일 단위) 한계가 있으므로, 아래 중 하나를 사용합니다.
+  1. S3 Lifecycle(1일) + 짧은 Presigned URL 만료(예: 10분)
+  2. EventBridge Scheduler + Lambda 정리 잡(생성 시각 기준 1시간 경과 객체 삭제)
+  3. 업로드 시 `expiresAt` 메타데이터 기록 후 배치 삭제
+
+### 5-2. Frontend 정적 호스팅(S3 + CloudFront)
+- `frontend/` 산출물을 S3 버킷에 업로드 후 CloudFront 배포를 연결하면 정적 웹 주소로 서비스할 수 있습니다.
+- 운영 권장 구성
+  - S3 버킷: private + OAC(Origin Access Control)
+  - CloudFront: HTTPS 강제, 압축(br/gzip), 캐시 정책 분리(`index.html` 짧게, 정적 자산 길게)
+  - Route53: 커스텀 도메인 연결
+- 이 레포의 Lambda Function URL과 CORS를 함께 사용할 때는 CloudFront 도메인을 허용 Origin으로 등록합니다.
+
+### 5-3. 배포 자동화(GitHub Actions)
+- 수동 배포 스크립트(`infra/aws-cli-deploy-lambda.sh`)를 기반으로 CI/CD를 구성할 수 있습니다.
+- 예시 워크플로
+  - `main` push 시: Lambda 패키징/배포 + Frontend S3 sync + CloudFront invalidation
+  - Secret: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `POLLY_S3_BUCKET`
+  - 보호 전략: `workflow_dispatch` + `environment` 승인(운영 반영 전 human gate)
+
+### 5-4. 다국어 혼합(한국어/영어/일본어) 자연스러운 음성 처리
+- Polly는 단일 Voice에서도 `SSML <lang>` 태그를 통해 부분 언어 전환이 가능합니다.
+- 실무에서는 아래 전략이 자연스러움을 높입니다.
+  1. 텍스트 언어 구간 분리(ko/en/ja 토큰화)
+  2. 구간별 최적 Voice 매핑(예: ko-KR 음성 + en-US 구간은 <lang> 또는 별도 합성)
+  3. 숫자/약어/고유명사 정규화(발음 사전 규칙)
+  4. 길이가 긴 문장은 문장 단위 합성 후 오디오 결합(지연/실패 분산)
+- 품질 우선 시, 언어별로 별도 MP3를 생성하고 후처리 페이드로 결합하는 방식도 고려합니다.
+
+### 5-5. 운영 안정성
+- 재시도 정책: Polly/S3 실패 시 exponential backoff + jitter.
+- 관측성: CloudWatch Logs에 requestId, voiceId, engine, latency(ms), s3Key 기록.
+- 비용 관리: 문자 수 기반 비용 모니터링(일별/서비스별 태깅).
+- 보안: 공개 URL 최소화, presigned URL 만료 짧게, IAM least privilege 유지.
