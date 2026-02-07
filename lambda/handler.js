@@ -5,7 +5,9 @@ const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const region = process.env.AWS_REGION;
 const bucket = process.env.POLLY_S3_BUCKET;
 const prefix = process.env.POLLY_S3_PREFIX || "polly-lab/";
-const allowOrigin = process.env.CORS_ALLOW_ORIGIN || "*";
+
+// ❌ allowOrigin / CORS_ALLOW_ORIGIN 사용 제거
+// const allowOrigin = process.env.CORS_ALLOW_ORIGIN || "*";
 
 const polly = new PollyClient({ region });
 const s3 = new S3Client({ region });
@@ -14,19 +16,21 @@ function json(statusCode, payload) {
   return {
     statusCode,
     headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": allowOrigin,
-      "Access-Control-Allow-Methods": "POST,OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type"
+      "Content-Type": "application/json"
+      // ❌ CORS 헤더는 Function URL CORS가 붙여줌 (중복 방지)
+      // "Access-Control-Allow-Origin": allowOrigin,
+      // "Access-Control-Allow-Methods": "POST,OPTIONS",
+      // "Access-Control-Allow-Headers": "Content-Type"
     },
     body: JSON.stringify(payload)
   };
 }
 
 exports.handler = async (event) => {
-  if (event.requestContext?.http?.method === "OPTIONS") {
-    return json(200, { ok: true });
-  }
+  // ❌ OPTIONS는 Function URL CORS가 처리하므로 제거(남겨도 되지만 헤더 중복 위험)
+  // if (event.requestContext?.http?.method === "OPTIONS") {
+  //   return json(200, { ok: true });
+  // }
 
   if (!region || !bucket) {
     return json(500, { error: "AWS_REGION 및 POLLY_S3_BUCKET 환경변수가 필요합니다." });
@@ -61,7 +65,10 @@ exports.handler = async (event) => {
     const ext = format === "ogg_vorbis" ? "ogg" : format;
     const safeVoice = String(voiceId).replace(/[^a-zA-Z0-9_-]/g, "");
     const key = `${prefix}${Date.now()}-${safeVoice}.${ext}`;
-    const contentType = format === "mp3" ? "audio/mpeg" : format === "ogg_vorbis" ? "audio/ogg" : "application/octet-stream";
+    const contentType =
+      format === "mp3" ? "audio/mpeg" :
+      format === "ogg_vorbis" ? "audio/ogg" :
+      "application/octet-stream";
 
     await s3.send(new PutObjectCommand({
       Bucket: bucket,
@@ -70,7 +77,11 @@ exports.handler = async (event) => {
       ContentType: contentType
     }));
 
-    const audioUrl = await getSignedUrl(s3, new GetObjectCommand({ Bucket: bucket, Key: key }), { expiresIn: 3600 });
+    const audioUrl = await getSignedUrl(
+      s3,
+      new GetObjectCommand({ Bucket: bucket, Key: key }),
+      { expiresIn: 3600 }
+    );
 
     return json(200, {
       savedToS3: true,

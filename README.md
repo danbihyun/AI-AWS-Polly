@@ -27,22 +27,92 @@ AI-AWS-Polly/
 - Node.js 18+
 - S3 버킷 1개
 
+```
+sudo apt-get update
+sudo apt-get install -y zip unzip
+```
+---
+
+```
+aws iam put-user-policy \
+  --user-name bedrock \
+  --policy-name polly-tts-lambda-deploy \
+  --policy-document file://polly-lambda-deploy.json
+```
+---
+
+![alt text](image.png)
+
+
 ```bash
 AWS_REGION=ap-northeast-2 \
 LAMBDA_NAME=polly-tts-lambda \
 ROLE_NAME=polly-tts-lambda-role \
-POLLY_S3_BUCKET=your-polly-bucket \
+POLLY_S3_BUCKET=polly-bucket-edumgt \
 CORS_ALLOW_ORIGIN='*' \
 ./infra/aws-cli-deploy-lambda.sh
+```
+#### POLLY_S3_BUCKET 의 버킷명은 전세계 고유할 것으로 예상하는 이름으로 줄것
+
+#### 다음의 에러가 보일 경우 update 대기필요
+```
+An error occurred (ResourceConflictException) when calling the UpdateFunctionConfiguration operation: The operation cannot be performed at this time. An update is in progress for resource: arn:aws:lambda:ap-northeast-2:086015456585:function:polly-tts-lambda
+```
+---
+```
+aws lambda wait function-updated --function-name polly-tts-lambda
+# (있으면) v2도 가능
+aws lambda wait function-updated-v2 --function-name polly-tts-lambda
+```
+---
+```
+root@DESKTOP-D6A344Q:/home/AI-AWS-Polly# aws lambda get-function-configuration \
+  --function-name polly-tts-lambda \
+  --query '{LastUpdateStatus:LastUpdateStatus,Reason:LastUpdateStatusReason}' \
+  --output table
+--------------------------------
+|   GetFunctionConfiguration   |
++-------------------+----------+
+| LastUpdateStatus  | Reason   |
++-------------------+----------+
+|  Successful       |  None    |
++-------------------+----------+
 ```
 
 배포가 끝나면 Function URL이 출력됩니다.
 
+---
+```
+[19:24:45] [2/8] IAM role create (if not exists)
+[19:24:46] [3/8] Attach policies
+[19:24:49] [4/8] Ensure S3 bucket exists (create if missing)
+[19:24:50]   - bucket not accessible or not exists: polly-bucket-edumgt (head-bucket rc=254)
+[19:24:50]   - trying to create bucket in region: ap-northeast-2
+[19:24:51]   - bucket created: polly-bucket-edumgt
+[19:24:51] [5/8] Lambda create/update (conflict-safe)
+[19:25:15] [6/8] Function URL create/get
+[19:25:18] [7/8] S3 bucket CORS apply
+[19:25:20]   - bucket CORS applied: polly-bucket-edumgt
+[19:25:20] [8/8] Done
+
+완료:
+ - Function URL: https://urcofhfr7rkzdnpvokasrpv7ae0dovrx.lambda-url.ap-northeast-2.on.aws/
+ - S3 Bucket   : polly-bucket-edumgt
+ - S3 Prefix   : polly-lab/
+ ```
+
+![alt text](image-2.png)
+
+![alt text](image-1.png)
+
+
 ## 3) Frontend 실행
-정적 파일 서버로 `frontend/`를 열어 사용합니다.
+정적 파일 서버로 `frontend/`를 사용합니다. Repo 상위 폴더에서 http-server frontend -p 8080 실행
 
 ```bash
-python3 -m http.server 8080 -d frontend
+npm i -g http-server
+http-server frontend -p 8080
+
 # 브라우저에서 http://localhost:8080 접속
 ```
 
@@ -52,6 +122,84 @@ python3 -m http.server 8080 -d frontend
 3. Voice/Engine 선택
 4. `MP3 생성 & 재생` 클릭
 5. MP3가 S3에 저장되고 즉시 재생
+
+---
+### CORS 오류 발생 시
+
+![alt text](image-3.png)
+
+```
+root@DESKTOP-D6A344Q:/home/AI-AWS-Polly/server# aws lambda update-function-url-config \
+  --function-name polly-tts-lambda \
+  --auth-type NONE \
+  --cors '{
+    "AllowOrigins":["http://localhost:8080"],
+    "AllowMethods":["POST"],
+    "AllowHeaders":["content-type"],
+    "ExposeHeaders":["content-type"],
+    "MaxAge":86400
+  }'
+{
+    "FunctionUrl": "https://urcofhfr7rkzdnpvokasrpv7ae0dovrx.lambda-url.ap-northeast-2.on.aws/",
+    "FunctionArn": "arn:aws:lambda:ap-northeast-2:086015456585:function:polly-tts-lambda",
+    "AuthType": "NONE",
+    "Cors": {
+        "AllowHeaders": [
+            "content-type"
+        ],
+        "AllowMethods": [
+            "POST"
+        ],
+        "AllowOrigins": [
+            "http://localhost:8080"
+        ],
+        "ExposeHeaders": [
+            "content-type"
+        ],
+        "MaxAge": 86400
+    },
+    "CreationTime": "2026-02-07T10:13:13.984183027Z",
+    "LastModifiedTime": "2026-02-07T10:35:48.409155241Z"
+}
+```
+
+### 403 오류
+![alt text](image-4.png)
+
+```
+aws lambda get-policy --function-name polly-tts-lambda
+```
+---
+```
+root@DESKTOP-D6A344Q:/home/AI-AWS-Polly# aws lambda add-permission \
+  --function-name polly-tts-lambda \
+  --statement-id UrlPolicyInvokeFunctionPublic \
+  --action lambda:InvokeFunction \
+  --principal "*" \
+  --invoked-via-function-url
+{
+    "Statement": "{\"Sid\":\"UrlPolicyInvokeFunctionPublic\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"lambda:InvokeFunction\",\"Resource\":\"arn:aws:lambda:ap-northeast-2:086015456585:function:polly-tts-lambda\",\"Condition\":{\"Bool\":{\"lambda:InvokedViaFunctionUrl\":\"true\"}}}"
+}
+```
+
+---
+### 람다 다시 반영할때도
+```
+AWS_REGION=ap-northeast-2 \
+LAMBDA_NAME=polly-tts-lambda \
+ROLE_NAME=polly-tts-lambda-role \
+POLLY_S3_BUCKET=polly-bucket-edumgt \
+CORS_ALLOW_ORIGIN='http://localhost:8080' \
+./infra/aws-cli-deploy-lambda.sh
+```
+### 한국어 제공 voice id 조회
+```
+aws polly describe-voices \
+  --region ap-northeast-2 \
+  --language-code ko-KR \
+  --query "Voices[].Id" \
+  --output text
+```
 
 ## 4) 기존 Express 서버 사용(옵션)
 ```bash
