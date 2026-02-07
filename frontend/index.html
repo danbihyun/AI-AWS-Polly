@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Polly Lambda TTS Player</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Amazon Polly TTS (Lambda + S3)</h1>
+      <p>텍스트를 입력하면 MP3를 S3에 저장하고, 즉시 재생합니다.</p>
+
+      <label for="apiUrl">Lambda Function URL</label>
+      <input id="apiUrl" placeholder="https://xxxx.lambda-url.ap-northeast-2.on.aws/" />
+
+      <label for="text">텍스트</label>
+      <textarea id="text" rows="6" placeholder="안녕하세요. AWS Polly 람다 실습입니다."></textarea>
+
+      <div class="row">
+        <div>
+          <label for="voiceId">Voice</label>
+          <select id="voiceId">
+            <option>Seoyeon</option>
+            <option>Jiwoo</option>
+            <option>Matthew</option>
+          </select>
+        </div>
+        <div>
+          <label for="engine">Engine</label>
+          <select id="engine">
+            <option value="standard">standard</option>
+            <option value="neural">neural</option>
+          </select>
+        </div>
+      </div>
+
+      <button id="synthesizeBtn">MP3 생성 & 재생</button>
+      <pre id="status"></pre>
+
+      <audio id="player" controls></audio>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
