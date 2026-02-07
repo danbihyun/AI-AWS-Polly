@@ -1,0 +1,123 @@
+{
+  "info": {
+    "name": "Polly Lab (Node + Polly)",
+    "_postman_id": "c8b2d3d3-polly-lab-0000-0000-000000000000",
+    "description": "POST /tts → Polly synthesize, POST /marks → speech marks",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{BASE_URL}}/health",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "health"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Voices (ko-KR)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{BASE_URL}}/voices?languageCode=ko-KR",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "voices"
+          ],
+          "query": [
+            {
+              "key": "languageCode",
+              "value": "ko-KR"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "TTS (text → base64 mp3)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"안녕하세요. 폴리 실습입니다.\",\n  \"voiceId\": \"Seoyeon\",\n  \"format\": \"mp3\",\n  \"textType\": \"text\",\n  \"saveToS3\": false\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/tts",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "tts"
+          ]
+        }
+      }
+    },
+    {
+      "name": "TTS (SSML example)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"<speak>안녕하세요 <break time=\\\"500ms\\\"/> 폴리입니다.</speak>\",\n  \"voiceId\": \"Seoyeon\",\n  \"format\": \"mp3\",\n  \"textType\": \"ssml\",\n  \"saveToS3\": false\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/tts",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "tts"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Speech Marks (word+sentence)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"안녕하세요. 자막 타이밍을 뽑습니다.\",\n  \"voiceId\": \"Seoyeon\",\n  \"marks\": [\"word\",\"sentence\"],\n  \"textType\": \"text\"\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/marks",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "marks"
+          ]
+        }
+      }
+    }
+  ]
+}
