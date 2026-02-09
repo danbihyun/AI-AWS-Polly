@@ -6,34 +6,46 @@ const region = process.env.AWS_REGION;
 const bucket = process.env.POLLY_S3_BUCKET;
 const prefix = process.env.POLLY_S3_PREFIX || "polly-lab/";
 
-// ❌ allowOrigin / CORS_ALLOW_ORIGIN 사용 제거
-// const allowOrigin = process.env.CORS_ALLOW_ORIGIN || "*";
+// ✅ 로컬 FE 오리진(필요시 추가)
+const allowOrigin = process.env.CORS_ALLOW_ORIGIN || "http://localhost:8080";
 
 const polly = new PollyClient({ region });
 const s3 = new S3Client({ region });
 
-function json(statusCode, payload) {
+function response(statusCode, payload, extraHeaders = {}) {
   return {
     statusCode,
     headers: {
-      "Content-Type": "application/json"
-      // ❌ CORS 헤더는 Function URL CORS가 붙여줌 (중복 방지)
-      // "Access-Control-Allow-Origin": allowOrigin,
-      // "Access-Control-Allow-Methods": "POST,OPTIONS",
-      // "Access-Control-Allow-Headers": "Content-Type"
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": allowOrigin,
+      "Access-Control-Allow-Methods": "POST,OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Max-Age": "600",
+      ...extraHeaders
     },
     body: JSON.stringify(payload)
   };
 }
 
 exports.handler = async (event) => {
-  // ❌ OPTIONS는 Function URL CORS가 처리하므로 제거(남겨도 되지만 헤더 중복 위험)
-  // if (event.requestContext?.http?.method === "OPTIONS") {
-  //   return json(200, { ok: true });
-  // }
+  const method = event?.requestContext?.http?.method || event?.httpMethod;
+
+  // ✅ preflight 처리
+  if (method === "OPTIONS") {
+    return {
+      statusCode: 204,
+      headers: {
+        "Access-Control-Allow-Origin": allowOrigin,
+        "Access-Control-Allow-Methods": "POST,OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Max-Age": "600"
+      },
+      body: ""
+    };
+  }
 
   if (!region || !bucket) {
-    return json(500, { error: "AWS_REGION 및 POLLY_S3_BUCKET 환경변수가 필요합니다." });
+    return response(500, { error: "AWS_REGION 및 POLLY_S3_BUCKET 환경변수가 필요합니다." });
   }
 
   try {
@@ -47,7 +59,7 @@ exports.handler = async (event) => {
     } = body;
 
     if (!text || !String(text).trim()) {
-      return json(400, { error: "text가 필요합니다." });
+      return response(400, { error: "text가 필요합니다." });
     }
 
     const pollyRes = await polly.send(new SynthesizeSpeechCommand({
@@ -65,6 +77,7 @@ exports.handler = async (event) => {
     const ext = format === "ogg_vorbis" ? "ogg" : format;
     const safeVoice = String(voiceId).replace(/[^a-zA-Z0-9_-]/g, "");
     const key = `${prefix}${Date.now()}-${safeVoice}.${ext}`;
+
     const contentType =
       format === "mp3" ? "audio/mpeg" :
       format === "ogg_vorbis" ? "audio/ogg" :
@@ -83,7 +96,7 @@ exports.handler = async (event) => {
       { expiresIn: 3600 }
     );
 
-    return json(200, {
+    return response(200, {
       savedToS3: true,
       s3Bucket: bucket,
       s3Key: key,
@@ -93,6 +106,6 @@ exports.handler = async (event) => {
     });
   } catch (error) {
     console.error(error);
-    return json(500, { error: error.message || "unknown error" });
+    return response(500, { error: error.message || "unknown error" });
   }
 };
