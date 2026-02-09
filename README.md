@@ -236,6 +236,14 @@ npm i
 export AWS_REGION=ap-northeast-2
 node index.js
 ```
+---
+```
+export AWS_REGION=ap-northeast-2
+export POLLY_S3_BUCKET=polly-bucket-edumgt
+export POLLY_S3_PREFIX=polly-lab/
+node index.js
+```
+
 
 ## 참고 문서
 - API: `docs/api.md`
