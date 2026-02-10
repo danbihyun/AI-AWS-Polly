@@ -1,0 +1,17 @@
+{
+  "Rules": [
+    {
+      "ID": "expire-polly-lab-1day",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "polly-lab/"
+      },
+      "Expiration": {
+        "Days": 1
+      },
+      "AbortIncompleteMultipartUpload": {
+        "DaysAfterInitiation": 1
+      }
+    }
+  ]
+}
