@@ -2,11 +2,11 @@
 set -euo pipefail
 
 # 사용 예시
-# AWS_REGION=ap-northeast-2 \
-# LAMBDA_NAME=polly-tts-lambda \
-# ROLE_NAME=polly-tts-lambda-role \
-# POLLY_S3_BUCKET=polly-bucket-edumgt \
-# CORS_ALLOW_ORIGIN='*' \
+AWS_REGION=ap-northeast-2
+LAMBDA_NAME=polly-tts-lambda
+ROLE_NAME=polly-tts-lambda-role
+POLLY_S3_BUCKET=demo-hdb-edumgt-example
+CORS_ALLOW_ORIGIN='*' \
 # ./infra/aws-cli-deploy-lambda.sh
 
 : "${AWS_REGION:?AWS_REGION is required}"

@@ -63,7 +63,7 @@ sudo apt-get install -y zip unzip
 
 ```
 aws iam put-user-policy \
-  --user-name bedrock \
+  --user-name admin \
   --policy-name polly-tts-lambda-deploy \
   --policy-document file://polly-lambda-deploy.json
 ```
@@ -73,12 +73,12 @@ aws iam put-user-policy \
 
 
 ```bash
-AWS_REGION=ap-northeast-2 \
-LAMBDA_NAME=polly-tts-lambda \
-ROLE_NAME=polly-tts-lambda-role \
-POLLY_S3_BUCKET=polly-bucket-edumgt \
-CORS_ALLOW_ORIGIN='*' \
-./infra/aws-cli-deploy-lambda.sh
+export AWS_REGION=ap-northeast-2
+export LAMBDA_NAME=polly-tts-lambda
+export ROLE_NAME=polly-tts-lambda-role
+export POLLY_S3_BUCKET=demo-hdb-edumgt-example
+export CORS_ALLOW_ORIGIN='*'
+sudo ./infra/aws-cli-deploy-lambda.sh
 ```
 #### POLLY_S3_BUCKET 의 버킷명은 전세계 고유할 것으로 예상하는 이름으로 줄것
 
@@ -236,6 +236,14 @@ npm i
 export AWS_REGION=ap-northeast-2
 node index.js
 ```
+---
+```
+export AWS_REGION=ap-northeast-2
+export POLLY_S3_BUCKET=demo-hdb-edumgt-example
+export POLLY_S3_PREFIX=polly-lab/
+mode index.js
+```
+![alt text](image-5.png)
 
 ## 참고 문서
 - API: `docs/api.md`
