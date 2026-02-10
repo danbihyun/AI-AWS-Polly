@@ -19,6 +19,31 @@ sudo apt install -y groff-base
 
 - [ ] S3 오디오 객체 자동 정리 설계
   - [ ] 옵션 A: Lifecycle Rule(일 단위)
+---
+
+![alt text](image-7.png)
+
+---
+```
+aws events put-targets \
+  --rule "polly-lab-objectcreated" \
+  --targets '[
+    {
+      "Id": "create-delete-schedule",
+      "Arn": "arn:aws:lambda:ap-northeast-2:086015456585:function:polly-create-delete-schedule"
+    }
+  ]'
+```
+---
+```
+aws lambda add-permission \
+  --function-name polly-create-delete-schedule \
+  --statement-id "AllowEventBridgeInvoke" \
+  --action "lambda:InvokeFunction" \
+  --principal events.amazonaws.com \
+  --source-arn "arn:aws:events:ap-northeast-2:086015456585:rule/polly-lab-objectcreated"
+```
+
   - [ ] 옵션 B: EventBridge + Lambda(정확히 1시간 후 삭제)
   - [ ] 객체 태그(`ttl=1h`) 기반 삭제 정책 검토
 - [ ] Presigned URL 만료 정책 표준화(예: 5~15분)
