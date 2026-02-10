@@ -20,7 +20,8 @@ async function listVoices({ languageCode = "ko-KR" } = {}) {
   return voiceCache.data;
 }
 
-async function synthesize({ text, textType = "text", 
+async function synthesize({ text, 
+  textType = "text", 
   voiceId = "Seoyeon", 
   outputFormat = "mp3", 
   engine = "standard", 
