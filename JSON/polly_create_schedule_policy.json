@@ -1,0 +1,15 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["scheduler:CreateSchedule"],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["iam:PassRole"],
+      "Resource": "arn:aws:iam::086015456585:role/scheduler-invoke-lambda-role"
+    }
+  ]
+}
