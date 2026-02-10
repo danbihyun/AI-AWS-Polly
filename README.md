@@ -67,6 +67,8 @@ aws iam put-user-policy \
   --policy-name polly-tts-lambda-deploy \
   --policy-document file://polly-lambda-deploy.json
 ```
+![alt text](image-5.png)
+
 ---
 
 ![alt text](image.png)
@@ -154,6 +156,25 @@ http-server frontend -p 8080
 ---
 ### CORS 오류 발생 시
 
+```
+debian@DESKTOP-OJOTK17:~/project/AI-AWS-Polly$ URL="https://2jo52ugrpxfmdnkbqqetznpfoa0banot.lambda-url.ap-northeast-2.on.aws/" 
+
+# preflight 재현
+curl -i -X OPTIONS "$URL" \
+  -H "Origin: http://localhost:8080" \
+  -H "Access-Control-Request-Method: POST" \
+  -H "Access-Control-Request-Headers: content-type"
+HTTP/1.1 403 Forbidden
+Date: Mon, 09 Feb 2026 07:38:07 GMT
+Content-Type: application/json
+Content-Length: 144
+Connection: keep-alive
+x-amzn-RequestId: 6c2ba115-254e-4145-a115-a8c8da97230c
+x-amzn-ErrorType: AccessDeniedException
+
+{"Message":"Forbidden. For troubleshooting Function URL authorization issues, see: https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html"}debian@DESKTOP-OJOTK17:~/project/AI-AWS-Polly$ 
+```
+
 ![alt text](image-3.png)
 
 ```
@@ -190,6 +211,8 @@ root@DESKTOP-D6A344Q:/home/AI-AWS-Polly/server# aws lambda update-function-url-c
     "LastModifiedTime": "2026-02-07T10:35:48.409155241Z"
 }
 ```
+
+![alt text](image-6.png)
 
 ### 403 오류
 ![alt text](image-4.png)
@@ -244,6 +267,7 @@ export POLLY_S3_PREFIX=polly-lab/
 mode index.js
 ```
 ![alt text](image-5.png)
+
 
 ## 참고 문서
 - API: `docs/api.md`

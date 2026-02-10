@@ -1,8 +1,10 @@
 const express = require("express");
+const cors = require("cors");
 const { listVoices, synthesize, speechMarks } = require("./pollyClient");
 const { hasS3Config, uploadAudio, presignGet } = require("./s3Client");
 
 const app = express();
+app.use(cors()); // ✅ 브라우저 FE에서 호출 가능
 app.use(express.json({ limit: "2mb" }));
 
 app.get("/health", (req, res) => res.json({ ok: true }));
