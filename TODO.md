@@ -3,6 +3,20 @@
 > 목표: Amazon Polly 기반 TTS 서비스를 학습용에서 운영형으로 확장.
 
 ## 1) 스토리지/수명주기
+```
+debian@DESKTOP-OJOTK17:~/project/AI-AWS-Polly$ aws s3 ls
+2026-01-17 20:48:14 elasticbeanstalk-ap-northeast-2-086015456585
+2026-02-07 22:32:34 polly-bucket-edumgt
+2025-12-16 10:39:27 www.edumgt.co.kr
+2025-12-16 13:17:12 www.edumgt.co.kr.log
+debian@DESKTOP-OJOTK17:~/project/AI-AWS-Polly$ aws s3 help
+
+Could not find executable named "groff or mandoc"
+debian@DESKTOP-OJOTK17:~/project/AI-AWS-Polly$ sudo apt update
+sudo apt install -y groff-base
+```
+---
+
 - [ ] S3 오디오 객체 자동 정리 설계
   - [ ] 옵션 A: Lifecycle Rule(일 단위)
   - [ ] 옵션 B: EventBridge + Lambda(정확히 1시간 후 삭제)
